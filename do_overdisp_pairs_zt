@@ -1,0 +1,16 @@
+#!/bin/bash
+clear 
+# touch the output so it can be created/overwritten without a complaint from the OS
+touch overdisp.corr
+rm overdisp.corr
+for i in $*;
+do
+	# .Tz	format: obs exp z avg_rate start_sample duration path_length(pix) speed linearity
+	# call the passes, selecting only those where exp=$2 > avg_rate=$4 AND speed=$8 > 2 to ensure mouse was moving “enough" 
+        awk '{if($6 > 0) {if ((($2/($6/30)) > $4) && ($8 > 2) && ($11/($15/30)) > $13) print}}' $i > $i.ExpGrAvgSpeed2.Tzs
+
+	# select just the culled z values
+	cut -f 3 < $i.ExpGrAvgSpeed2.Tzs > $i.ExpGrAvgSpeed.zs1
+        cut -f 12 < $i.ExpGrAvgSpeed2.Tzs > $i.ExpGrAvgSpeed.zs2	
+        corr2lists $i.ExpGrAvgSpeed.zs1 $i.ExpGrAvgSpeed.zs2 >> overdisp.corr
+done
